@@ -44,15 +44,15 @@ export function calcularOrcamento(rendaMensal: number, transacoes: Transacao[]):
 
   transacoes.forEach((t) => {
     if (t.tipo === "despesa") {
-      gastos[t.classificacao] += t.valor;
+      gastos[t.classificacao as keyof typeof gastos] += t.valor;
       despesaTotal += t.valor;
     }
   });
 
   // Helper para criar a estrutura de status de cada pilar
   const criarRelatorio = (tipo: Classificacao): RelatorioOrcamento => {
-    const limite = limites[tipo];
-    const gastoAtual = gastos[tipo];
+    const limite = limites[tipo as keyof typeof limites];
+    const gastoAtual = gastos[tipo as keyof typeof gastos];
     const porcentagemGasta = limite > 0 ? (gastoAtual / limite) * 100 : 0;
 
     let status: RelatorioOrcamento["status"] = "regular";
