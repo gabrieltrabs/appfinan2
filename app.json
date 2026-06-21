@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "financas-app",
+    "slug": "financas-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/logo.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./src/assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F8F9FA"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/logo.png",
+        "backgroundColor": "#F8F9FA"
+      },
+      "androidStatusBar": {
+        "barStyle": "dark-content",
+        "backgroundColor": "#00000000",
+        "translucent": true
+      },
+      "androidNavigationBar": {
+        "barStyle": "dark-content",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
