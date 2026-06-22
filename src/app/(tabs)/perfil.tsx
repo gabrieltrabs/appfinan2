@@ -1,7 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
 import { SobreAppModal } from "../../components/sobre-app-modal";
 import { logoutUsuario } from "../../services/authService";
 import { useUserStore } from "../../store/userStore";
@@ -11,6 +12,7 @@ export default function Perfil() {
   const perfil = useUserStore((state) => state.perfil);
   const firebaseUser = useUserStore((state) => state.firebaseUser);
   const [modalSobreVisivel, setModalSobreVisivel] = useState(false);
+  const [fotoUri, setFotoUri] = useState<string | null>(null);
 
   async function handleLogout() {
     Alert.alert("Encerrar sessão", "Deseja realmente sair da sua conta?", [
@@ -32,10 +34,36 @@ export default function Perfil() {
     ]);
   }
 
+  async function selecionarImagem(tipo: "camera" | "galeria") {
+    // Usamos 'images' como string para garantir compatibilidade total entre versões
+    const options: ImagePicker.ImagePickerOptions = {
+      mediaTypes: 'images' as any, 
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    };
+
+    let result;
+    if (tipo === "camera") {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert("Permissão negada", "Precisamos de acesso à câmera.");
+        return;
+      }
+      result = await ImagePicker.launchCameraAsync(options);
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync(options);
+    }
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setFotoUri(result.assets[0].uri);
+    }
+  }
+
   function handleAlterarFoto() {
     Alert.alert("Alterar Foto", "Escolha uma opção:", [
-      { text: "Tirar Foto", onPress: () => {} },
-      { text: "Escolher da Galeria", onPress: () => {} },
+      { text: "Tirar Foto", onPress: () => selecionarImagem("camera") },
+      { text: "Escolher da Galeria", onPress: () => selecionarImagem("galeria") },
       { text: "Cancelar", style: "cancel" }
     ]);
   }
@@ -45,18 +73,20 @@ export default function Perfil() {
       <StatusBar barStyle="light-content" backgroundColor="#11C76F" />
       
       <ScrollView contentContainerStyle={s.scrollContainer} showsVerticalScrollIndicator={false}>
-        
         <View style={s.topoVerdeHeader}>
           <Text style={s.tituloBranco}>Seu Perfil</Text>
         </View>
 
         <View style={s.containerConteudo}>
-          
           <View style={s.cardFotoPerfil}>
             <Pressable onPress={handleAlterarFoto} style={s.avatarContainer}>
-              <View style={s.circuloAvatarVazio}>
-                <Text style={s.avatarLetra}>{perfil?.nome?.charAt(0).toUpperCase() ?? "?"}</Text>
-              </View>
+              {fotoUri ? (
+                <Image source={{ uri: fotoUri }} style={s.circuloAvatarVazio} />
+              ) : (
+                <View style={s.circuloAvatarVazio}>
+                  <Text style={s.avatarLetra}>{perfil?.nome?.charAt(0).toUpperCase() ?? "?"}</Text>
+                </View>
+              )}
               <View style={s.badgeEditarFoto}>
                 <MaterialIcons name="photo-camera" size={12} color="#FFFFFF" />
               </View>
@@ -86,14 +116,12 @@ export default function Perfil() {
             <MaterialIcons name="chevron-right" size={20} color="#9CA3AF" />
           </Pressable>
 
-          {/* 💡 ESTILO NOVO: Botão de Sair mais elegante */}
           <View style={s.wrapperBotaoCentro}>
             <Pressable onPress={handleLogout} style={s.btnSairConta}>
               <MaterialIcons name="logout" size={18} color="#EF4444" />
               <Text style={s.txtSairConta}>Encerrar sessão</Text>
             </Pressable>
           </View>
-
         </View>
       </ScrollView>
 
@@ -110,7 +138,7 @@ const s = StyleSheet.create({
   containerConteudo: { paddingHorizontal: 16, marginTop: -32, gap: 14 },
   cardFotoPerfil: { backgroundColor: "#FFFFFF", padding: 24, borderRadius: 20, alignItems: "center", borderWidth: 1, borderColor: "#E5E7EB", elevation: 3 },
   avatarContainer: { width: 80, height: 80, marginBottom: 12, position: 'relative' },
-  circuloAvatarVazio: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#11C76F", justifyContent: "center", alignItems: "center" },
+  circuloAvatarVazio: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#11C76F", justifyContent: "center", alignItems: "center", overflow: 'hidden' },
   badgeEditarFoto: { position: "absolute", bottom: 0, right: 0, backgroundColor: "#11C76F", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center", borderWidth: 2, borderColor: "#FFFFFF" },
   avatarLetra: { color: "#FFFFFF", fontSize: 32, fontWeight: "bold" },
   txtNomeUsuario: { fontSize: 18, fontWeight: "700", color: "#1F2937" },
@@ -118,29 +146,10 @@ const s = StyleSheet.create({
   cardInfoData: { backgroundColor: "#FFFFFF", padding: 16, borderRadius: 16, borderWidth: 1, borderColor: "#E5E7EB" },
   labelInfoSub: { fontSize: 9, fontWeight: "700", color: "#9CA3AF", letterSpacing: 0.5 },
   valorInfoRenda: { fontSize: 16, fontWeight: "700", color: "#1F2937", marginTop: 6 },
-
   cardSobreApp: { backgroundColor: "#FFFFFF", padding: 16, borderRadius: 16, borderWidth: 1, borderColor: "#E5E7EB", flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   rowSobreApp: { flexDirection: "row", alignItems: "center", gap: 10 },
   txtSobreApp: { fontSize: 14, fontWeight: "600", color: "#374151" },
-  
   wrapperBotaoCentro: { alignItems: "center", marginTop: 12 },
-  
-  // Estilização Premium do botão Sair
-  btnSairConta: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    justifyContent: "center", 
-    gap: 8,
-    paddingVertical: 12, 
-    paddingHorizontal: 24, 
-    borderRadius: 12, 
-    borderWidth: 1, 
-    borderColor: "#FEE2E2", 
-    backgroundColor: "#FEF2F2" 
-  },
-  txtSairConta: { 
-    color: "#EF4444", 
-    fontSize: 14, 
-    fontWeight: "700" 
-  }
+  btnSairConta: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12, borderWidth: 1, borderColor: "#FEE2E2", backgroundColor: "#FEF2F2" },
+  txtSairConta: { color: "#EF4444", fontSize: 14, fontWeight: "700" }
 });
